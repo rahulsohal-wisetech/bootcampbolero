@@ -3,6 +3,7 @@ package com.bolero.bootcamp.Bootcamp.service;
 import com.bolero.bootcamp.Bootcamp.entity.Department;
 import com.bolero.bootcamp.Bootcamp.service.impl.DepartmentServiceImpl;
 import com.bolero.bootcamp.Bootcamp.repository.DepartmentRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -17,8 +18,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 class DepartmentServiceTest {
 
@@ -38,20 +45,26 @@ class DepartmentServiceTest {
         validDepartment = new Department();
         validDepartment.setId(1L);
         validDepartment.setName("Development");
-        validDepartment.setDefault(false);
+        validDepartment.setMandatory(false);
         validDepartment.setReadOnly(false);
 
         readOnlyDepartment = new Department();
         readOnlyDepartment.setId(2L);
         readOnlyDepartment.setName("Organisation");
-        readOnlyDepartment.setDefault(false);
+        readOnlyDepartment.setMandatory(false);
         readOnlyDepartment.setReadOnly(true);
 
         updatedDepartment = new Department();
         updatedDepartment.setId(3L);
         updatedDepartment.setName("DevelopmentProduct");
-        updatedDepartment.setDefault(false);
+        updatedDepartment.setMandatory(false);
         updatedDepartment.setReadOnly(false);
+    }
+
+    @AfterEach
+    void tearDown() {
+        reset(departmentRepository);
+
     }
 
     @Test

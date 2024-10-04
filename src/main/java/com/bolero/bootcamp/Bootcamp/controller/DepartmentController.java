@@ -26,16 +26,23 @@ public class DepartmentController {
         this.departmentService = departmentService;
     }
 
+    /**
+     * Creates a new department.
+     *
+     * @param department the department object to be created
+     * @return the created department object
+     */
     @PostMapping
     public ResponseEntity<Department> addDepartment(@RequestBody Department department) {
-        try {
-            departmentService.createDepartment(department);
-            return ResponseEntity.status(HttpStatus.CREATED).body(department);
-        } catch (InvalidDepartmentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(department);
-        }
+        departmentService.createDepartment(department);
+        return ResponseEntity.status(HttpStatus.CREATED).body(department);
     }
 
+    /**
+     * Retrieves departments in paginated form.
+     *
+     * @return a list of departments in pagination.
+     */
     @GetMapping
     public ResponseEntity<Page<Department>> getAllDepartments(
             @RequestParam(defaultValue = "0") int page,
@@ -45,36 +52,37 @@ public class DepartmentController {
         return ResponseEntity.status(HttpStatus.OK).body(departmentService.getAllDepartments(pageable));
     }
 
+    /**
+     * Retrieves a department by ID.
+     *
+     * @param id the unique identifier of the department
+     * @return the department with the specified ID
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getDepartmentById(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(departmentService.getDepartmentById(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+       return ResponseEntity.ok(departmentService.getDepartmentById(id));
     }
 
+    /**
+     * Updates an existing department.
+     *
+     * @param id       the unique identifier of the department to be updated
+     * @param department the department object containing updated information
+     * @return the updated department object
+     */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateDepartment(@PathVariable Long id, @RequestBody Department department) {
-        try {
-            return ResponseEntity.ok(departmentService.updateDepartment(id, department));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(departmentService.updateDepartment(id, department));
     }
 
+    /**
+     * Deletes a department by ID.
+     *
+     * @param id the unique identifier of the department to be deleted
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
-        try {
-            departmentService.deleteDepartment(id);
-            return ResponseEntity.noContent().build();
-        } catch (DepartmentNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (InvalidDepartmentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-
+        departmentService.deleteDepartment(id);
+        return ResponseEntity.noContent().build();
     }
-
 }

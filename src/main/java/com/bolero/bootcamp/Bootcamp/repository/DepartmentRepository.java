@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
-    @Query("SELECT d FROM Department d WHERE d.isDefault = true")
-    Optional<Department> findDefaultDepartment();
+    @Query("SELECT d FROM Department d WHERE d.mandatory = true")
+    Optional<Department> findMandatoryDepartment();
 }
 

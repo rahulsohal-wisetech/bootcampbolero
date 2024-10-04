@@ -14,7 +14,8 @@ import java.util.Set;
 @NoArgsConstructor
 public class Employee {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy=GenerationType.SEQUENCE, generator = "EMPLOYEE_SEQ_GEN")
+    @SequenceGenerator(name = "EMPLOYEE_SEQ_GEN", sequenceName = "SEQ_EMPLOYEE_ID", allocationSize = 1)
     private Long id;
 
     private String firstName;

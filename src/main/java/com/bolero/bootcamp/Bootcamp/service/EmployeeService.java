@@ -60,5 +60,8 @@ public interface EmployeeService {
      * @return
      */
     @Transactional
-    Employee addDepartmentToEmployee(Long employeeId, Long departmentId);
+    Employee assignDepartmentToEmployee(Long employeeId, Long departmentId);
+
+    @Transactional
+    Employee unassignDepartmentFromEmployee(Long employeeId, Long departmentId);
 }

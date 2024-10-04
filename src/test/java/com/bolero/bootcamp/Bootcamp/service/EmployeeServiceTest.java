@@ -2,16 +2,23 @@ package com.bolero.bootcamp.Bootcamp.service;
 
 import com.bolero.bootcamp.Bootcamp.entity.Department;
 import com.bolero.bootcamp.Bootcamp.entity.Employee;
+import com.bolero.bootcamp.Bootcamp.exception.DepartmentNotFoundException;
 import com.bolero.bootcamp.Bootcamp.exception.EmployeeNotFoundException;
+import com.bolero.bootcamp.Bootcamp.exception.InvalidEmployeeException;
 import com.bolero.bootcamp.Bootcamp.repository.DepartmentRepository;
 import com.bolero.bootcamp.Bootcamp.repository.EmployeeRepository;
 import com.bolero.bootcamp.Bootcamp.service.impl.EmployeeServiceImpl;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +47,11 @@ class EmployeeServiceTest {
 
     private Employee validEmployee;
     private Employee validEmployee2;
+    private Employee updateEmployee;
+    private Employee invalidEmployeeWithFirstNameIsNull;
+    private Employee invalidEmployeeWithLastNameIsNull;
+    private Employee invalidEmployeeWithFirstNameIsEmpty;
+    private Employee invalidEmployeeWithLastNameIsEmpty;
 
     private Department validDepartment;
     private Department readOnlyDepartment;
@@ -54,13 +66,13 @@ class EmployeeServiceTest {
         readOnlyDepartment = new Department();
         readOnlyDepartment.setId(1L);
         readOnlyDepartment.setName("Organisation");
-        readOnlyDepartment.setDefault(true);
+        readOnlyDepartment.setMandatory(true);
         readOnlyDepartment.setReadOnly(true);
 
         validDepartment = new Department();
         validDepartment.setId(2L);
         validDepartment.setName("Development");
-        validDepartment.setDefault(false);
+        validDepartment.setMandatory(false);
         validDepartment.setReadOnly(false);
 
         validDepartmentsSetOne = new HashSet<>();
@@ -81,6 +93,40 @@ class EmployeeServiceTest {
         validEmployee2.setFirstName("Jane");
         validEmployee2.setLastName("Doe");
         validEmployee2.setDepartments(validDepartmentsSetTwo);
+
+        updateEmployee = new Employee();
+        updateEmployee.setId(1L);
+        updateEmployee.setFirstName("John");
+        updateEmployee.setLastName("Wick");
+        updateEmployee.setDepartments(validDepartmentsSetOne);
+
+        invalidEmployeeWithFirstNameIsNull = new Employee();
+        invalidEmployeeWithFirstNameIsNull.setId(3L);
+        invalidEmployeeWithFirstNameIsNull.setFirstName(null);
+        invalidEmployeeWithFirstNameIsNull.setLastName("Goodman");
+
+        invalidEmployeeWithLastNameIsNull = new Employee();
+        invalidEmployeeWithLastNameIsNull.setId(4L);
+        invalidEmployeeWithLastNameIsNull.setFirstName("Alice");
+        invalidEmployeeWithLastNameIsNull.setLastName(null);
+
+        invalidEmployeeWithFirstNameIsEmpty = new Employee();
+        invalidEmployeeWithFirstNameIsEmpty.setId(5L);
+        invalidEmployeeWithFirstNameIsEmpty.setFirstName("");
+        invalidEmployeeWithFirstNameIsEmpty.setLastName("Brown");
+
+        invalidEmployeeWithLastNameIsEmpty = new Employee();
+        invalidEmployeeWithLastNameIsEmpty.setId(6L);
+        invalidEmployeeWithLastNameIsEmpty.setFirstName("Bob");
+        invalidEmployeeWithLastNameIsEmpty.setLastName("");
+    }
+
+    @AfterEach
+    void tearDown() {
+        reset(employeeRepository, departmentRepository);
+
+        validDepartmentsSetOne.clear();
+        validDepartmentsSetTwo.clear();
     }
 
     @Test
@@ -107,7 +153,7 @@ class EmployeeServiceTest {
 
     @Test
     void testCreateEmployeeSuccess() {
-        when(departmentRepository.findDefaultDepartment()).thenReturn(Optional.ofNullable(readOnlyDepartment));
+        when(departmentRepository.findMandatoryDepartment()).thenReturn(Optional.ofNullable(readOnlyDepartment));
         when(employeeRepository.save(validEmployee)).thenReturn(validEmployee);
 
         Employee createdEmployee = employeeService.saveEmployee(validEmployee);
@@ -117,21 +163,31 @@ class EmployeeServiceTest {
     }
 
     @Test
+    void testCreateEmployeeWhenFirstNameIsNull() {
+        doThrow(InvalidEmployeeException.class).when(employeeRepository).save(invalidEmployeeWithFirstNameIsNull);
+        RuntimeException exception = assertThrows(InvalidEmployeeException.class, () -> {
+            employeeService.saveEmployee(invalidEmployeeWithFirstNameIsEmpty);
+        });
+        assertEquals("First Name should not be empty", exception.getMessage());
+    }
+
+    @Test
     void testUpdateEmployeeSuccess() {
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(validEmployee));
         when(employeeRepository.save(validEmployee)).thenReturn(validEmployee);
 
-        Employee updatedEmployee = employeeService.updateEmployee(1L, validEmployee);
+        Employee updatedEmployee = employeeService.updateEmployee(1L, updateEmployee);
 
         assertNotNull(updatedEmployee);
         assertEquals("John", updatedEmployee.getFirstName());
+        assertEquals("Wick", updatedEmployee.getLastName());
     }
 
     @Test
     void testUpdateEmployeeNotFound() {
         when(employeeRepository.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        RuntimeException exception = assertThrows(EmployeeNotFoundException.class, () -> {
             employeeService.updateEmployee(1L, validEmployee);
         });
 
@@ -151,7 +207,7 @@ class EmployeeServiceTest {
     void testDeleteEmployeeNotFound() {
         when(employeeRepository.existsById(1L)).thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        RuntimeException exception = assertThrows(EmployeeNotFoundException.class, () -> {
             employeeService.deleteEmployee(1L);
         });
 
@@ -173,4 +229,107 @@ class EmployeeServiceTest {
         assertEquals("Jane", result.getContent().get(1).getFirstName());
         assertEquals(2, result.getTotalElements());
     }
+
+    @Test
+    public void testAssignDepartmentToEmployeeSuccess() {
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(validEmployee));
+        when(departmentRepository.findById(2L)).thenReturn(Optional.of(validDepartment));
+        when(employeeRepository.save(any(Employee.class))).thenReturn(validEmployee);
+
+        Employee result = employeeService.assignDepartmentToEmployee(1L, 2L);
+
+        assertNotNull(result);
+        assertTrue(result.getDepartments().contains(validDepartment));
+        verify(employeeRepository, times(1)).save(validEmployee);
+    }
+
+    @Test
+    public void testAssignDepartmentToNonExistentEmployee() {
+        when(employeeRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(EmployeeNotFoundException.class, () -> {
+            employeeService.assignDepartmentToEmployee(1L, 2L);
+        });
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    public void testAssignNonExistentDepartmentToEmployee() {
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(validEmployee));
+        when(departmentRepository.findById(2L)).thenReturn(Optional.empty());
+
+        assertThrows(DepartmentNotFoundException.class, () -> {
+            employeeService.assignDepartmentToEmployee(1L, 2L);
+        });
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    public void testUnassignDepartmentFromEmployeeSuccess() {
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(validEmployee));
+        when(departmentRepository.findById(2L)).thenReturn(Optional.of(validDepartment));
+
+        validEmployee.getDepartments().add(validDepartment);
+        when(employeeRepository.save(any(Employee.class))).thenReturn(validEmployee);
+
+        Employee result = employeeService.unassignDepartmentFromEmployee(1L, 2L);
+
+        assertNotNull(result);
+        assertFalse(result.getDepartments().contains(validDepartment));
+        verify(employeeRepository, times(1)).save(validEmployee);
+    }
+
+    @Test
+    public void testUnassignDepartmentNotAssignedToEmployee() {
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(validEmployee));
+        when(departmentRepository.findById(2L)).thenReturn(Optional.of(validDepartment));
+
+        validEmployee.getDepartments().clear();  // Ensure department is not assigned
+
+        assertThrows(DepartmentNotFoundException.class, () -> {
+            employeeService.unassignDepartmentFromEmployee(1L, 2L);
+        });
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    public void testUnassignDepartmentFromNonExistentEmployee() {
+        when(employeeRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(EmployeeNotFoundException.class, () -> {
+            employeeService.unassignDepartmentFromEmployee(1L, 2L);
+        });
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    public void testUnassignNonExistentDepartmentFromEmployee() {
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(validEmployee));
+        when(departmentRepository.findById(2L)).thenReturn(Optional.empty());
+
+        assertThrows(DepartmentNotFoundException.class, () -> {
+            employeeService.unassignDepartmentFromEmployee(1L, 2L);
+        });
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    public void testAssignAlreadyAssignedDepartmentToEmployee() {
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(validEmployee));
+        when(departmentRepository.findById(2L)).thenReturn(Optional.of(validDepartment));
+
+        validEmployee.getDepartments().add(validDepartment);
+        when(employeeRepository.save(any(Employee.class))).thenReturn(validEmployee);
+
+        Employee result = employeeService.assignDepartmentToEmployee(1L, 2L);
+
+        assertTrue(result.getDepartments().contains(validDepartment));  // Ensure no duplication
+        verify(employeeRepository, times(1)).save(validEmployee);
+    }
+
 }

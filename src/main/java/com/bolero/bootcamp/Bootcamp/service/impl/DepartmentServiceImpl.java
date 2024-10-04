@@ -1,5 +1,6 @@
 package com.bolero.bootcamp.Bootcamp.service.impl;
 
+import com.bolero.bootcamp.Bootcamp.constant.Constants;
 import com.bolero.bootcamp.Bootcamp.entity.Department;
 import com.bolero.bootcamp.Bootcamp.exception.DepartmentNotFoundException;
 import com.bolero.bootcamp.Bootcamp.exception.InvalidDepartmentException;
@@ -28,7 +29,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         log.info("Fetching department with ID: {}", id);
         return departmentRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Department not found with ID: {}", id);
+                    log.error(Constants.DEPARTMENT_NOT_FOUND, id);
                     return new DepartmentNotFoundException("Department not found with ID: " + id);
                 });
     }
@@ -56,7 +57,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         log.info("Updating department with ID: {}", id);
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Department not found with ID: {}", id);
+                    log.error(Constants.DEPARTMENT_NOT_FOUND, id);
                     return new DepartmentNotFoundException("Department not found with ID: " + id);
                 });
         if (department.getName() == null || department.getName().isEmpty()) {
@@ -64,13 +65,13 @@ public class DepartmentServiceImpl implements DepartmentService {
             throw new InvalidDepartmentException("Department name cannot be null or empty");
         }
 
-        if (department.isReadOnly()) {
+        if (department.getReadOnly()) {
             log.error("Attempted to update a read-only department: {}", department.getName());
             throw new IllegalArgumentException("Cannot update a read-only department");
         }
 
         department.setName(departmentDetails.getName());
-        department.setDefault(departmentDetails.isDefault());
+        department.setMandatory(departmentDetails.getMandatory());
         log.info("Successfully updated department: {}", department.getName());
         return departmentRepository.save(department);
     }
@@ -82,12 +83,12 @@ public class DepartmentServiceImpl implements DepartmentService {
         log.info("Deleting department with ID: {}", id);
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Department not found with ID: {}", id);
+                    log.error(Constants.DEPARTMENT_NOT_FOUND, id);
                     return new DepartmentNotFoundException("Department not found with ID: " + id);
                 });
         if (department != null) {
 
-            if (department.isReadOnly()) {
+            if (department.getReadOnly()) {
                 log.error("Attempted to delete a read-only department: {}", department.getName());
                 throw new IllegalArgumentException("Cannot delete a read-only department");
             }

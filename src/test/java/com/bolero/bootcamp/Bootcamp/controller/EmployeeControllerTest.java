@@ -60,13 +60,13 @@ public class EmployeeControllerTest {
         readOnlyDepartment = new Department();
         readOnlyDepartment.setId(1L);
         readOnlyDepartment.setName("Organisation");
-        readOnlyDepartment.setDefault(true);
+        readOnlyDepartment.setMandatory(true);
         readOnlyDepartment.setReadOnly(true);
 
         validDepartment = new Department();
         validDepartment.setId(2L);
         validDepartment.setName("Development");
-        validDepartment.setDefault(false);
+        validDepartment.setMandatory(false);
         validDepartment.setReadOnly(false);
 
         validDepartmentsSetOne = new HashSet<>();
@@ -121,7 +121,7 @@ public class EmployeeControllerTest {
 
         // Verify that the default department was assigned
         verify(employeeService).saveEmployee(argThat(employee ->
-                employee.getDepartments().stream().anyMatch(department -> department.isDefault())));
+                employee.getDepartments().stream().anyMatch(Department::getMandatory)));
     }
 
     @Test

@@ -7,15 +7,16 @@ import lombok.Data;
 @Data
 public class Department {
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy=GenerationType.SEQUENCE, generator = "DEPARTMENT_SEQ_GEN")
+    @SequenceGenerator(name = "DEPARTMENT_SEQ_GEN", sequenceName = "SEQ_DEPARTMENT_ID", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;
 
     @Column(nullable = false)
-    private boolean isDefault;
+    private Boolean mandatory;
 
     @Column(nullable = false)
-    private boolean readOnly;
+    private Boolean readOnly;
 }

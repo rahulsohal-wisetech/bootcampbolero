@@ -1,9 +1,11 @@
 package com.bolero.bootcamp.Bootcamp.service.impl;
 
+import com.bolero.bootcamp.Bootcamp.constant.Constants;
 import com.bolero.bootcamp.Bootcamp.entity.Department;
 import com.bolero.bootcamp.Bootcamp.entity.Employee;
 import com.bolero.bootcamp.Bootcamp.exception.DepartmentNotFoundException;
 import com.bolero.bootcamp.Bootcamp.exception.EmployeeNotFoundException;
+import com.bolero.bootcamp.Bootcamp.exception.InvalidEmployeeException;
 import com.bolero.bootcamp.Bootcamp.repository.DepartmentRepository;
 import com.bolero.bootcamp.Bootcamp.repository.EmployeeRepository;
 import com.bolero.bootcamp.Bootcamp.service.EmployeeService;
@@ -30,7 +32,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         log.info("Fetching employee with ID: {}", id);
         return employeeRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Employee not found with ID: {}", id);
+                    log.error(Constants.EMPLOYEE_NOT_FOUND, id);
                     return new EmployeeNotFoundException("Employee not found with ID: " + id);
                 });
     }
@@ -43,7 +45,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Employee saveEmployee(Employee employee) {
-        Department defaultDepartment = departmentRepository.findDefaultDepartment()
+        if(employee.getFirstName().isEmpty() || employee.getLastName().isEmpty()) {
+            throw new InvalidEmployeeException("Employee not found with name: " + employee.getFirstName() + " " + employee.getLastName());
+        }
+
+        Department defaultDepartment = departmentRepository.findMandatoryDepartment()
                 .orElseThrow(() -> new DepartmentNotFoundException("Department not found"));
 
         employee.addDepartment(defaultDepartment);
@@ -55,7 +61,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         log.info("Updating employee with ID: {}", id);
         Employee existingEmployee = employeeRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Employee not found with ID: {}", id);
+                    log.error(Constants.EMPLOYEE_NOT_FOUND, id);
                     return new EmployeeNotFoundException("Employee not found with ID: " + id);
                 });
 
@@ -74,22 +80,40 @@ public class EmployeeServiceImpl implements EmployeeService {
             employeeRepository.deleteById(id);
             log.info("Successfully deleted employee with ID: {}", id);
         } else {
+            log.error(Constants.EMPLOYEE_NOT_FOUND, id);
             throw new EmployeeNotFoundException("Employee not found with ID: " + id);
         }
 
     }
 
-    @Transactional
     @Override
-    public Employee addDepartmentToEmployee(Long employeeId, Long departmentId) {
+    public Employee assignDepartmentToEmployee(Long employeeId, Long departmentId) {
+       Employee employee = employeeRepository.findById(employeeId)
+               .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with ID: " + employeeId));
+
+       Department department = departmentRepository.findById(departmentId)
+               .orElseThrow(() -> new DepartmentNotFoundException("Department not found with ID: " + departmentId));
+
+       employee.addDepartment(department);
+
+       return employeeRepository.save(employee);
+    }
+
+    @Override
+    public Employee unassignDepartmentFromEmployee(Long employeeId, Long departmentId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with ID: " + employeeId));
 
         Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new DepartmentNotFoundException("Department not found with ID: " + departmentId));
 
-        employee.addDepartment(department); // Add department to employee's list of departments
+        if(employee.getDepartments().contains(department)) {
+            employee.getDepartments().remove(department);
+        } else {
+            log.error("Employee - {} {} is not assigned to department: {}", employee.getFirstName(), employee.getLastName(), department.getName());
+            throw new DepartmentNotFoundException("Department not found with ID: " + departmentId);
+        }
 
-        return employeeRepository.save(employee); // Save updated employee entity
+        return employeeRepository.save(employee);
     }
 }

@@ -50,25 +50,25 @@ public class DepartmentControllerTest {
         validDepartment = new Department();
         validDepartment.setId(1L);
         validDepartment.setName("Development");
-        validDepartment.setDefault(false);
+        validDepartment.setMandatory(false);
         validDepartment.setReadOnly(false);
 
         readOnlyDepartment = new Department();
         readOnlyDepartment.setId(2L);
         readOnlyDepartment.setName("Organisation");
-        readOnlyDepartment.setDefault(false);
+        readOnlyDepartment.setMandatory(false);
         readOnlyDepartment.setReadOnly(true);
 
         invalidDepartment = new Department();
         invalidDepartment.setId(3L);
         invalidDepartment.setName(null);
-        invalidDepartment.setDefault(false);
+        invalidDepartment.setMandatory(false);
         invalidDepartment.setReadOnly(false);
 
         defaultDepartment = new Department();
         defaultDepartment.setId(4L);
         defaultDepartment.setName("Executive");
-        defaultDepartment.setDefault(true);
+        defaultDepartment.setMandatory(true);
         defaultDepartment.setReadOnly(false);
     }
 

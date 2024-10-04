@@ -1,9 +1,7 @@
 package com.bolero.bootcamp.Bootcamp.controller;
 
-import com.bolero.bootcamp.Bootcamp.entity.Department;
 import com.bolero.bootcamp.Bootcamp.entity.Employee;
 import com.bolero.bootcamp.Bootcamp.exception.EmployeeNotFoundException;
-import com.bolero.bootcamp.Bootcamp.exception.InvalidEmployeeException;
 import com.bolero.bootcamp.Bootcamp.service.EmployeeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,18 +33,10 @@ public class EmployeeController {
     public ResponseEntity<Page<Employee>> getAllEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-
-        try {
             Pageable pageable = PageRequest.of(page, size);
+
             Page<Employee> employees = employeeService.getAllEmployees(pageable);
             return ResponseEntity.ok(employees);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid pagination parameters: ", e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        } catch (Exception e) {
-            log.error("Error occurred while fetching employees: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
     }
 
     /**
@@ -57,13 +47,9 @@ public class EmployeeController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getEmployeeById(@PathVariable Long id) {
-        try {
-            Employee employee = employeeService.getEmployeeById(id);
-            return ResponseEntity.ok(employee);
-        } catch (EmployeeNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("Error", "Employee Not found", "id", id));
-        }
+         Employee employee = employeeService.getEmployeeById(id);
+         return ResponseEntity.ok(employee);
+
     }
 
     /**
@@ -74,14 +60,8 @@ public class EmployeeController {
      */
     @PostMapping
     public ResponseEntity<?> createEmployee(@RequestBody Employee employee) {
-        try {
-            Employee createdEmployee = employeeService.saveEmployee(employee);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdEmployee);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        Employee createdEmployee = employeeService.saveEmployee(employee);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdEmployee);
     }
 
     /**
@@ -93,14 +73,8 @@ public class EmployeeController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateEmployee(@PathVariable Long id, @RequestBody Employee employee) {
-        try {
-            Employee updatedEmployee = employeeService.updateEmployee(id, employee);
-            return ResponseEntity.ok(updatedEmployee);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (EmployeeNotFoundException e1) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        Employee updatedEmployee = employeeService.updateEmployee(id, employee);
+        return ResponseEntity.ok(updatedEmployee);
     }
 
     /**
@@ -110,12 +84,8 @@ public class EmployeeController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
-        try {
-            employeeService.deleteEmployee(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+        employeeService.deleteEmployee(id);
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -127,11 +97,7 @@ public class EmployeeController {
      */
     @PutMapping("/{employeeId}/departments/{departmentId}")
     public ResponseEntity<?> addDepartmentToEmployee(@PathVariable Long employeeId, @PathVariable Long departmentId) {
-        try {
-            Employee updatedEmployee = employeeService.addDepartmentToEmployee(employeeId, departmentId);
-            return ResponseEntity.ok(updatedEmployee);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+        Employee updatedEmployee = employeeService.assignDepartmentToEmployee(employeeId, departmentId);
+        return ResponseEntity.ok(updatedEmployee);
     }
 }
