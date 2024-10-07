@@ -6,6 +6,7 @@ import { DepartmentService } from './departments/department.service';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import {CommonModule} from '@angular/common';
+import $ from 'jquery';
 
 declare var window: any; // For Bootstrap Modal
 
@@ -30,12 +31,18 @@ export class AppComponent implements OnInit {
   pageSize: number = 10;
   employeeForm: Employee= new Employee(0, '', '');
   departmentForm: Department = new Department(0, '', false, false);
+  selectedDepartment: Department | null = null;
+  availableDepartments: Department[] = [];
 
   isEditEmployee: boolean = false;
   isEditDepartment: boolean = false;
 
   employeeModal: any;
   departmentModal: any;
+  assignDepartmentModal: any;
+
+  errorMessage: string | null = null;
+  warningMessage: string | null = null;
 
   constructor(
     private employeeService: EmployeeService,
@@ -46,6 +53,7 @@ export class AppComponent implements OnInit {
     if (typeof window !== 'undefined' && window.bootstrap) {
       this.employeeModal = new window.bootstrap.Modal(document.getElementById('employeeModal'));
       this.departmentModal = new window.bootstrap.Modal(document.getElementById('departmentModal'));
+      this.assignDepartmentModal = new window.bootstrap.Modal(document.getElementById('assignDepartmentModal'))
     }
     this.fetchEmployees();
     this.fetchDepartments();
@@ -64,6 +72,60 @@ export class AppComponent implements OnInit {
       this.departments = response.content;  // Extract array
       this.totalPages = response.totalPages;
     });
+  }
+
+  openAssignDepartmentModal(employee: Employee): void {
+    this.selectedDepartment = null;
+    this.employeeForm = employee;
+    this.availableDepartments = this.departments.filter(
+      (dept) => !employee.departments.some((assignedDept) => assignedDept.id === dept.id)
+    );
+    this.assignDepartmentModal.show();
+  }
+
+  isAssigned(employeeId: number, departmentId: number): boolean {
+    return this.employees.find(employee => employee.id === employeeId)?.departments.some(department => department.id === departmentId) || false;
+  }
+
+  assignOrUnassignDepartment(): void {
+    if (this.selectedDepartment && this.employeeForm) {
+      const isAssigned = this.employeeForm.departments.includes(this.selectedDepartment);
+
+      if (isAssigned) {
+        this.unassignDepartment(this.selectedDepartment, this.employeeForm);
+      } else {
+        this.assignDepartment(this.selectedDepartment, this.employeeForm);
+      }
+
+      // Hide the modal after the operation is done
+      const modalElement = $('#assignDepartmentModal') as any;
+      if (modalElement) {
+        modalElement.modal('hide');
+      }
+    }
+  }
+
+  assignDepartment(department: Department, employee: Employee): void {
+    this.employeeService.assignDepartmentToEmployee(employee.id, department.id).subscribe(() => {
+      console.log(`Department ${department.name} assigned to employee ${employee.firstName}`);
+      employee.departments.push(department); // Add department to employee's assigned list
+      this.availableDepartments = this.availableDepartments.filter(dept => dept.id !== department.id); // Remove from available
+    },
+      (error) => {
+        this.errorMessage = `Failed to assign department: ${error.message}`;
+      });
+  }
+
+  // Unassign department from employee
+  unassignDepartment(department: Department, employee: Employee): void {
+    this.employeeService.unassignDepartmentFromEmployee(employee.id, department.id).subscribe(() => {
+      console.log(`Department ${department.name} unassigned from employee ${employee.firstName}`);
+      employee.departments = employee.departments.filter(dept => dept.id !== department.id); // Remove from employee's departments
+      this.availableDepartments.push(department); // Add back to available departments
+    },
+      (error) => {
+        this.errorMessage = `Failed to unassign department: ${error.message}`;
+      });
   }
 
   openEmployeeModal(employee?: Employee) {
@@ -113,6 +175,14 @@ export class AppComponent implements OnInit {
   deleteDepartment(departmentId: number) {
     this.departmentService.deleteDepartment(departmentId).subscribe(() => {
       this.fetchDepartments();
-    });
+    },
+      (error) => {
+        this.errorMessage = `Failed to delete department: ${error.message}`;
+      });
+  }
+
+  closeAlert(): void {
+    this.errorMessage = null;
+    this.warningMessage = null;
   }
 }

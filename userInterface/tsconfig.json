@@ -3,6 +3,8 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "target": "es5",
+    "module": "esnext",
     "outDir": "./dist/out-tsc",
     "strict": true,
     "noImplicitOverride": true,
@@ -22,6 +24,9 @@
     "lib": [
       "ES2022",
       "dom"
+    ],
+    "types": [
+      "jquery"  // Add this line
     ]
   },
   "angularCompilerOptions": {

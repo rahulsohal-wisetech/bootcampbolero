@@ -75,6 +75,7 @@ class EmployeeServiceTest {
     private Employee validEmployee2;
     private Employee updateEmployee;
     private Employee invalidEmployee;
+    private Employee invalidEmployee2;
 
     private Department validDepartment;
     private Department readOnlyDepartment;
@@ -133,6 +134,12 @@ class EmployeeServiceTest {
         invalidEmployee.setLastName(INVALID_EMPLOYEE_LASTNAME);
         invalidEmployee.setDepartments(validDepartmentsSetOne);
 
+        invalidEmployee2 = new Employee();
+        invalidEmployee2.setId(VALID_EMPLOYEE_ID);
+        invalidEmployee2.setFirstName(INVALID_EMPLOYEE_FIRSTNAME);
+        invalidEmployee2.setLastName(INVALID_EMPLOYEE_LASTNAME);
+        invalidEmployee2.setDepartments(validDepartmentsSetOne);
+
         employees = Arrays.asList(validEmployee, validEmployee2);
         pageable = PageRequest.of(0, 2);
         paginatedEmployees = new PageImpl<>(employees, pageable, employees.size());
@@ -148,24 +155,12 @@ class EmployeeServiceTest {
         lenient().when(mockEmployeeRepository.existsById(VALID_EMPLOYEE_ID)).thenReturn(true);
         lenient().when(mockEmployeeRepository.existsById(INVALID_EMPLOYEE_ID)).thenReturn(false);
         lenient().when(mockEmployeeRepository.findAll(pageable)).thenReturn(paginatedEmployees);
-
-        lenient().when(mockEmployeeRepository.findById(VALID_EMPLOYEE_ID)).thenReturn(Optional.of(validEmployee));
         lenient().when(mockDepartmentRepository.findById(VALID_EMPLOYEE_ID)).thenReturn(Optional.of(validDepartment));
-        lenient().when(mockEmployeeRepository.save(any(Employee.class))).thenReturn(validEmployee);
+        lenient().when(mockEmployeeRepository.save(validEmployee)).thenReturn(validEmployee);
 
-        lenient().when(mockEmployeeRepository.findById(INVALID_EMPLOYEE_ID)).thenReturn(Optional.empty());
-
-        lenient().when(mockEmployeeRepository.save(any(Employee.class))).thenReturn(validEmployee);
-
-        lenient().when(mockEmployeeRepository.findById(VALID_EMPLOYEE_ID)).thenReturn(Optional.of(validEmployee));
         lenient().when(mockDepartmentRepository.findById(VALID_DEPARTMENT_ID)).thenReturn(Optional.of(validDepartment));
-
-        lenient().when(mockEmployeeRepository.findById(INVALID_EMPLOYEE_ID)).thenReturn(Optional.empty());
-
-        lenient().when(mockEmployeeRepository.findById(VALID_EMPLOYEE_ID)).thenReturn(Optional.of(validEmployee));
         lenient().when(mockDepartmentRepository.findById(INVALID_DEPARTMENT_ID)).thenReturn(Optional.empty());
 
-        lenient().when(mockEmployeeRepository.save(any(Employee.class))).thenReturn(validEmployee);
     }
 
     @AfterEach
@@ -231,11 +226,18 @@ class EmployeeServiceTest {
 
         assertEquals(EMPLOYEE_NOT_FOUND, exception.getMessage());
     }
+    @Test
+    void testUpdateEmployeeInvalidInput() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            ref.updateEmployee(VALID_EMPLOYEE_ID, invalidEmployee2);
+        });
+        assertEquals(INVALID_FIRST_LASTNAME, exception.getMessage());
+    }
 
     @Test
     void testDeleteEmployeeSuccess() {
 
-        employeeService.deleteEmployee(VALID_EMPLOYEE_ID);
+        ref.deleteEmployee(VALID_EMPLOYEE_ID);
         verify(mockEmployeeRepository, times(1)).existsById(VALID_EMPLOYEE_ID);
         verify(mockEmployeeRepository, times(1)).deleteById(VALID_EMPLOYEE_ID);
     }
@@ -243,14 +245,14 @@ class EmployeeServiceTest {
     @Test
     void testDeleteEmployeeNotFound() {
 
-        RuntimeException exception = assertThrows(EmployeeNotFoundException.class, () -> employeeService.deleteEmployee(INVALID_EMPLOYEE_ID));
+        RuntimeException exception = assertThrows(EmployeeNotFoundException.class, () -> ref.deleteEmployee(INVALID_EMPLOYEE_ID));
 
         assertEquals(EMPLOYEE_NOT_FOUND, exception.getMessage());
     }
 
     @Test
     void testGetAllEmployeeWithPaginationSuccess() {
-        Page<Employee> result = employeeService.getAllEmployees(pageable);
+        Page<Employee> result = ref.getAllEmployees(pageable);
 
         assertEquals(2, result.getContent().size());
         assertEquals(VALID_EMPLOYEE_FIRST_NAME, result.getContent().get(0).getFirstName());
@@ -261,7 +263,7 @@ class EmployeeServiceTest {
     @Test
     public void testAssignDepartmentToEmployeeSuccess() {
 
-        Employee result = employeeService.assignDepartmentToEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
+        Employee result = ref.assignDepartmentToEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
 
         assertNotNull(result);
         assertTrue(result.getDepartments().contains(validDepartment));
@@ -271,15 +273,13 @@ class EmployeeServiceTest {
     @Test
     public void testAssignDepartmentToNonExistentEmployee() {
 
-        assertThrows(EmployeeNotFoundException.class, () -> employeeService.assignDepartmentToEmployee(INVALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID));
+        assertThrows(EmployeeNotFoundException.class, () -> ref.assignDepartmentToEmployee(INVALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID));
         verify(mockEmployeeRepository, never()).save(any(Employee.class));
     }
 
     @Test
     public void testAssignNonExistentDepartmentToEmployee() {
-
-        assertThrows(DepartmentNotFoundException.class, () -> employeeService.assignDepartmentToEmployee(VALID_EMPLOYEE_ID, INVALID_DEPARTMENT_ID));
-
+        assertThrows(DepartmentNotFoundException.class, () -> ref.assignDepartmentToEmployee(VALID_EMPLOYEE_ID, INVALID_DEPARTMENT_ID));
         verify(mockEmployeeRepository, never()).save(any(Employee.class));
     }
 
@@ -287,7 +287,7 @@ class EmployeeServiceTest {
     public void testUnassignDepartmentFromEmployeeSuccess() {
 
         validEmployee.getDepartments().add(validDepartment);
-        Employee result = employeeService.unassignDepartmentFromEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
+        Employee result = ref.unassignDepartmentFromEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
 
         assertNotNull(result);
         assertFalse(result.getDepartments().contains(validDepartment));
@@ -296,11 +296,10 @@ class EmployeeServiceTest {
 
     @Test
     public void testUnassignDepartmentNotAssignedToEmployee() {
-
-        validEmployee.getDepartments().clear();  // Ensure department is not assigned
+        validEmployee.getDepartments().clear();
 
         assertThrows(DepartmentNotFoundException.class, () -> {
-            employeeService.unassignDepartmentFromEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
+            ref.unassignDepartmentFromEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
         });
 
         verify(mockEmployeeRepository, never()).save(any(Employee.class));
@@ -308,9 +307,8 @@ class EmployeeServiceTest {
 
     @Test
     public void testUnassignDepartmentFromNonExistentEmployee() {
-
         assertThrows(EmployeeNotFoundException.class, () -> {
-            employeeService.unassignDepartmentFromEmployee(INVALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
+            ref.unassignDepartmentFromEmployee(INVALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
         });
 
         verify(mockEmployeeRepository, never()).save(any(Employee.class));
@@ -318,9 +316,8 @@ class EmployeeServiceTest {
 
     @Test
     public void testUnassignNonExistentDepartmentFromEmployee() {
-
         assertThrows(DepartmentNotFoundException.class, () -> {
-            employeeService.unassignDepartmentFromEmployee(VALID_EMPLOYEE_ID, INVALID_DEPARTMENT_ID);
+            ref.unassignDepartmentFromEmployee(VALID_EMPLOYEE_ID, INVALID_DEPARTMENT_ID);
         });
 
         verify(mockEmployeeRepository, never()).save(any(Employee.class));
@@ -328,10 +325,8 @@ class EmployeeServiceTest {
 
     @Test
     public void testAssignAlreadyAssignedDepartmentToEmployee() {
-
         validEmployee.getDepartments().add(validDepartment);
-
-        Employee result = employeeService.assignDepartmentToEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
+        Employee result = ref.assignDepartmentToEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
 
         assertTrue(result.getDepartments().contains(validDepartment));
         verify(mockEmployeeRepository, times(1)).save(validEmployee);

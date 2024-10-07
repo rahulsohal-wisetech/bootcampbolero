@@ -31,4 +31,12 @@ export class EmployeeService {
   public deleteEmployee(employeeId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiServerUrl}/${employeeId}`);
   }
+
+  assignDepartmentToEmployee(employeeId: number, departmentId: number): Observable<Employee> {
+    return this.http.post<Employee>(`${this.apiServerUrl}/${employeeId}/departments/${departmentId}`, {});
+  }
+
+  unassignDepartmentFromEmployee(employeeId: number, departmentId: number): Observable<Employee> {
+    return this.http.delete<Employee>(`${this.apiServerUrl}/${employeeId}/departments/${departmentId}`);
+  }
 }

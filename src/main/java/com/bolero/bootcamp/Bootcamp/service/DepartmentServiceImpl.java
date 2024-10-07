@@ -109,7 +109,6 @@ public class DepartmentServiceImpl implements DepartmentService {
                     return new DepartmentNotFoundException("Department not found.");
                 });
         if (department != null) {
-
             if (department.getReadOnly()) {
                 log.error("Attempted to delete a read-only department: {}", department.getName());
                 throw new IllegalArgumentException("Cannot delete a read-only department");

@@ -1,3 +1,19 @@
+<!-- Error/Warning Alert Section -->
+<div class="container">
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ errorMessage }}
+    <button type="button" class="close" aria-label="Close" (click)="closeAlert()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div *ngIf="warningMessage" class="alert alert-warning alert-dismissible fade show" role="alert">
+    {{ warningMessage }}
+    <button type="button" class="close" aria-label="Close" (click)="closeAlert()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+</div>
+
 <div class="container mt-4">
   <h1 class="text-center">Employees & Departments</h1>
 
@@ -20,6 +36,7 @@
           <td>
             <button class="btn btn-warning" (click)="openEmployeeModal(employee)">Edit</button>
             <button class="btn btn-danger" (click)="deleteEmployee(employee.id)">Delete</button>
+            <button class="btn btn-primary" (click)="openAssignDepartmentModal(employee)">Assign/Unassign Department</button>
           </td>
         </tr>
         </tbody>
@@ -116,6 +133,46 @@
           <button type="submit" class="btn btn-primary">Save</button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+<!-- Assign/Unassign Department Button -->
+
+<!-- Modal HTML Structure -->
+<div class="modal fade" id="assignDepartmentModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="assignDepartmentLabel">Assign/Unassign Department</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        <h6>Already Assigned Departments</h6>
+        <ul>
+          <li *ngFor="let dept of employeeForm.departments">
+            {{ dept.name }} <button class="btn btn-danger btn-sm" (click)="unassignDepartment(dept, employeeForm)">Unassign</button>
+          </li>
+        </ul>
+
+        <hr />
+
+        <h6>Available Departments</h6>
+        <form>
+          <div class="form-group">
+            <label for="departmentsList">Select Department</label>
+            <select [(ngModel)]="selectedDepartment" name="department" class="form-control" id="departmentsList">
+              <option *ngFor="let dept of availableDepartments" [ngValue]="dept">{{ dept.name }}</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" (click)="assignOrUnassignDepartment()">Save changes</button>
+      </div>
     </div>
   </div>
 </div>

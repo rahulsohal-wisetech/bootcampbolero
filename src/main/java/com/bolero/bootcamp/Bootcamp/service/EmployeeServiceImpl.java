@@ -63,6 +63,11 @@ public class EmployeeServiceImpl implements EmployeeService {
                     return new EmployeeNotFoundException("Employee not found.");
                 });
 
+        if(employeeDetails.getFirstName() == null || employeeDetails.getLastName() == null || employeeDetails.getFirstName().isEmpty() || employeeDetails.getLastName().isEmpty()) {
+            log.error("FirstName or LastName is either empty or null!");
+            throw new IllegalArgumentException("Invalid FirstName or LastName");
+        }
+
         existingEmployee.setFirstName(employeeDetails.getFirstName());
         existingEmployee.setLastName(employeeDetails.getLastName());
         log.info("Successfully updated employee details for: {} {}", employeeDetails.getFirstName(), employeeDetails.getLastName());

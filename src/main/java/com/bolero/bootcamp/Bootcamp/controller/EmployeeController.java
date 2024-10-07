@@ -92,9 +92,17 @@ public class EmployeeController {
      * @param departmentId the unique identifier of the department to be updated
      * @return employee with added department.
      */
-    @PutMapping("/{employeeId}/departments/{departmentId}")
+    @PostMapping("/{employeeId}/departments/{departmentId}")
     public ResponseEntity<?> addDepartmentToEmployee(@PathVariable Long employeeId, @PathVariable Long departmentId) {
         Employee updatedEmployee = employeeService.assignDepartmentToEmployee(employeeId, departmentId);
         return ResponseEntity.ok(updatedEmployee);
+    }
+
+    @DeleteMapping("/{employeeId}/departments/{departmentId}")
+    public ResponseEntity<Void> unassignDepartment(
+            @PathVariable Long employeeId,
+            @PathVariable Long departmentId) {
+        employeeService.unassignDepartmentFromEmployee(employeeId, departmentId);
+        return ResponseEntity.noContent().build();
     }
 }
