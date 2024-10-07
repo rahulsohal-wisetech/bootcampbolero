@@ -1,7 +1,6 @@
 package com.bolero.bootcamp.Bootcamp.service;
 
 import com.bolero.bootcamp.Bootcamp.entity.Department;
-import com.bolero.bootcamp.Bootcamp.service.impl.DepartmentServiceImpl;
 import com.bolero.bootcamp.Bootcamp.repository.DepartmentRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,8 +40,16 @@ class DepartmentServiceTest {
     public static final String INVALID_DEPARTMENT_NAME = "";
     public static final Boolean INVALID_DEPARTMENT_MANDATORY = null;
 
+    public static final long MANDATE_DEPARTMENT_ID = 3L;
+    public static final String MANDATE_DEPARTMENT_NAME = "Management";
+    public static final boolean MANDATE_DEPARTMENT_MANDATORY = true;
+    public static final boolean MANDATE_DEPARTMENT_READONLY = false;
+
+    public static final boolean MANDATE_DEPARTMENT_MANDATORY_UPDATED = false;
+
     public static final String DEPARTMENT_NOT_FOUND = "Department not found.";
     public static final String DEPARTMENT_CANNOT_BE_NULL_OR_EMPTY = "Department name cannot be null or empty";
+    public static final String EXISTING_MANDATORY_DEPARTMENT = "Department creation failed due to existing mandatory department";
 
     @Mock
     private DepartmentRepository mockDepartmentRepository;
@@ -56,6 +63,11 @@ class DepartmentServiceTest {
     private Department readOnlyDepartment;
     private Department updatedDepartment;
     private Department invalidDepartment;
+    private Department mandateDepartment;
+    private Department updateMandateDepartment;
+    private Department updateMandateDepartment2;
+    private Department updateReadOnlyDepartment;
+    private Department updateInvalidDepartment;
     private Pageable pageable;
     private Page<Department> paginatedDepartments;
     private List<Department> departments;
@@ -81,6 +93,36 @@ class DepartmentServiceTest {
         updatedDepartment.setMandatory(UPDATED_DEPARTMENT_MANDATORY);
         updatedDepartment.setReadOnly(UPDATED_DEPARTMENT_READONLY);
 
+        mandateDepartment = new Department();
+        mandateDepartment.setId(MANDATE_DEPARTMENT_ID);
+        mandateDepartment.setName(MANDATE_DEPARTMENT_NAME);
+        mandateDepartment.setMandatory(MANDATE_DEPARTMENT_MANDATORY);
+        mandateDepartment.setReadOnly(MANDATE_DEPARTMENT_READONLY);
+
+        updateMandateDepartment = new Department();
+        updateMandateDepartment.setId(MANDATE_DEPARTMENT_ID);
+        updateMandateDepartment.setName(MANDATE_DEPARTMENT_NAME);
+        updateMandateDepartment.setMandatory(MANDATE_DEPARTMENT_MANDATORY_UPDATED);
+        updateMandateDepartment.setReadOnly(MANDATE_DEPARTMENT_READONLY);
+
+        updateMandateDepartment2 = new Department();
+        updateMandateDepartment2.setId(VALID_DEPARTMENT_ID);
+        updateMandateDepartment2.setName(VALID_DEPARTMENT_NAME);
+        updateMandateDepartment2.setMandatory(MANDATE_DEPARTMENT_MANDATORY);
+        updateMandateDepartment2.setReadOnly(VALID_DEPARTMENT_READONLY);
+
+        updateReadOnlyDepartment = new Department();
+        updateReadOnlyDepartment.setId(READONLY_DEPARTMENT_ID);
+        updateReadOnlyDepartment.setName(READONLY_DEPARTMENT_NAME);
+        updateReadOnlyDepartment.setMandatory(READONLY_DEPARTMENT_MANDATORY);
+        updateReadOnlyDepartment.setReadOnly(UPDATED_DEPARTMENT_READONLY);
+
+        updateInvalidDepartment = new Department();
+        updateInvalidDepartment.setId(VALID_DEPARTMENT_ID);
+        updateInvalidDepartment.setName(INVALID_DEPARTMENT_NAME);
+        updateInvalidDepartment.setMandatory(INVALID_DEPARTMENT_MANDATORY);
+        updateInvalidDepartment.setReadOnly(VALID_DEPARTMENT_READONLY);
+
         invalidDepartment = new Department();
         invalidDepartment.setId(INVALID_DEPARTMENT_ID);
         invalidDepartment.setName(INVALID_DEPARTMENT_NAME);
@@ -98,8 +140,12 @@ class DepartmentServiceTest {
         lenient().when(mockDepartmentRepository.save(updatedDepartment)).thenReturn(updatedDepartment);
         lenient().when(mockDepartmentRepository.findAll(pageable)).thenReturn(paginatedDepartments);
         lenient().when(mockDepartmentRepository.existsById(INVALID_DEPARTMENT_ID)).thenReturn(false);
-
-    }
+        lenient().when(mockDepartmentRepository.findById(MANDATE_DEPARTMENT_ID)).thenReturn(Optional.of(mandateDepartment));
+        lenient().when(mockDepartmentRepository.findMandatoryDepartment()).thenReturn(Optional.of(mandateDepartment));
+        lenient().when(mockDepartmentRepository.save(mandateDepartment)).thenReturn(mandateDepartment);
+        lenient().when(mockDepartmentRepository.findById(READONLY_DEPARTMENT_ID)).thenReturn(Optional.of(readOnlyDepartment));
+        lenient().when(mockDepartmentRepository.save(updateReadOnlyDepartment)).thenReturn(updateReadOnlyDepartment);
+        }
 
     @AfterEach
     void tearDown() {
@@ -186,5 +232,41 @@ class DepartmentServiceTest {
         });
 
         assertEquals(DEPARTMENT_NOT_FOUND, exception.getMessage());
+    }
+
+    @Test
+    void testUpdateMandatoryDepartmentSuccess() {
+        ref.updateDepartment(MANDATE_DEPARTMENT_ID, updateMandateDepartment);
+
+        verify(mockDepartmentRepository, times(1)).findById(MANDATE_DEPARTMENT_ID);
+        verify(mockDepartmentRepository, times(1)).save(updateMandateDepartment);
+    }
+
+    @Test
+    void testUpdateDepartmentToMandatoryDepartmentFailure() {
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ref.updateDepartment(VALID_DEPARTMENT_ID, updateMandateDepartment2);
+
+        });
+        assertEquals(EXISTING_MANDATORY_DEPARTMENT, exception.getMessage());
+    }
+
+    @Test
+    void testUpdateReadOnlyDepartmentSuccess() {
+        ref.updateDepartment(READONLY_DEPARTMENT_ID, updateReadOnlyDepartment);
+        verify(mockDepartmentRepository, times(1)).findById(READONLY_DEPARTMENT_ID);
+        verify(mockDepartmentRepository, times(1)).save(updateReadOnlyDepartment);
+    }
+
+    @Test
+    void testUpdateReadOnlyDepartmentNotFound() {}
+
+    @Test
+    void testUpdateDepartmentWithInvalidInput() {
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ref.updateDepartment(VALID_DEPARTMENT_ID, updateInvalidDepartment);
+        });
+        assertEquals(DEPARTMENT_CANNOT_BE_NULL_OR_EMPTY, exception.getMessage());
     }
 }

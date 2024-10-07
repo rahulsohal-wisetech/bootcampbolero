@@ -1,4 +1,4 @@
-package com.bolero.bootcamp.Bootcamp.service.impl;
+package com.bolero.bootcamp.Bootcamp.service;
 
 import com.bolero.bootcamp.Bootcamp.constant.Constants;
 import com.bolero.bootcamp.Bootcamp.entity.Department;
@@ -7,7 +7,6 @@ import com.bolero.bootcamp.Bootcamp.exception.DepartmentNotFoundException;
 import com.bolero.bootcamp.Bootcamp.exception.EmployeeNotFoundException;
 import com.bolero.bootcamp.Bootcamp.repository.DepartmentRepository;
 import com.bolero.bootcamp.Bootcamp.repository.EmployeeRepository;
-import com.bolero.bootcamp.Bootcamp.service.EmployeeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

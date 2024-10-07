@@ -1,16 +1,17 @@
-package com.bolero.bootcamp.Bootcamp.service.impl;
+package com.bolero.bootcamp.Bootcamp.service;
 
 import com.bolero.bootcamp.Bootcamp.constant.Constants;
 import com.bolero.bootcamp.Bootcamp.entity.Department;
 import com.bolero.bootcamp.Bootcamp.exception.DepartmentNotFoundException;
 import com.bolero.bootcamp.Bootcamp.exception.InvalidDepartmentException;
 import com.bolero.bootcamp.Bootcamp.repository.DepartmentRepository;
-import com.bolero.bootcamp.Bootcamp.service.DepartmentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 
 @Slf4j
@@ -48,6 +49,14 @@ public class DepartmentServiceImpl implements DepartmentService {
             log.error("Department creation failed due to invalid name");
             throw new InvalidDepartmentException("Department name cannot be null or empty");
         }
+
+        //Check for multiple mandatory department
+        Optional<Department> mandatoryDepartment = departmentRepository.findMandatoryDepartment();
+        if (mandatoryDepartment.isPresent() && department.getMandatory()) {
+            log.error("Department creation failed due to mandatory department");
+            throw new InvalidDepartmentException("Department creation failed due to existing mandatory department");
+        }
+
         return departmentRepository.save(department);
     }
 
@@ -65,9 +74,22 @@ public class DepartmentServiceImpl implements DepartmentService {
             throw new InvalidDepartmentException("Department name cannot be null or empty");
         }
 
-        if (department.getReadOnly()) {
-            log.error("Attempted to update a read-only department: {}", department.getName());
-            throw new IllegalArgumentException("Cannot update a read-only department");
+        //Check for multiple mandatory department
+        Optional<Department> mandatoryDepartment = departmentRepository.findMandatoryDepartment();
+        if (mandatoryDepartment.isPresent() && departmentDetails.getMandatory()) {
+            log.error("Department creation failed due to existing mandatory department");
+            throw new InvalidDepartmentException("Department creation failed due to existing mandatory department");
+        }
+
+        if (department.getReadOnly() && !departmentDetails.getReadOnly()) {
+            department.setReadOnly(false);
+        } else if (!department.getReadOnly() && departmentDetails.getReadOnly()) {
+            department.setReadOnly(true);
+        } else {
+            if (department.getReadOnly()) {
+                log.error("Attempted to update a read-only department: {}", department.getName());
+                throw new IllegalArgumentException("Cannot update a read-only department");
+            }
         }
 
         department.setName(departmentDetails.getName());

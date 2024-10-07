@@ -6,7 +6,6 @@ import com.bolero.bootcamp.Bootcamp.exception.DepartmentNotFoundException;
 import com.bolero.bootcamp.Bootcamp.exception.EmployeeNotFoundException;
 import com.bolero.bootcamp.Bootcamp.repository.DepartmentRepository;
 import com.bolero.bootcamp.Bootcamp.repository.EmployeeRepository;
-import com.bolero.bootcamp.Bootcamp.service.impl.EmployeeServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
