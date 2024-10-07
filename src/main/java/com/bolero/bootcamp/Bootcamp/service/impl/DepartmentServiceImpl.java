@@ -30,7 +30,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         return departmentRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error(Constants.DEPARTMENT_NOT_FOUND, id);
-                    return new DepartmentNotFoundException("Department not found with ID: " + id);
+                    return new DepartmentNotFoundException("Department not found.");
                 });
     }
 
@@ -58,9 +58,9 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error(Constants.DEPARTMENT_NOT_FOUND, id);
-                    return new DepartmentNotFoundException("Department not found with ID: " + id);
+                    return new DepartmentNotFoundException("Department not found.");
                 });
-        if (department.getName() == null || department.getName().isEmpty()) {
+        if (departmentDetails.getName() == null || departmentDetails.getName().isEmpty()) {
             log.error("Department name cannot be null or empty");
             throw new InvalidDepartmentException("Department name cannot be null or empty");
         }
@@ -84,7 +84,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error(Constants.DEPARTMENT_NOT_FOUND, id);
-                    return new DepartmentNotFoundException("Department not found with ID: " + id);
+                    return new DepartmentNotFoundException("Department not found.");
                 });
         if (department != null) {
 

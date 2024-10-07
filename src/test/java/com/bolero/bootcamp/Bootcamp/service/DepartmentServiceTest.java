@@ -6,9 +6,10 @@ import com.bolero.bootcamp.Bootcamp.repository.DepartmentRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -18,19 +19,35 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
+@ExtendWith(MockitoExtension.class)
 class DepartmentServiceTest {
 
+    public static final long VALID_DEPARTMENT_ID = 1L;
+    public static final String VALID_DEPARTMENT_NAME = "Development";
+    public static final boolean VALID_DEPARTMENT_MANDATORY = false;
+    public static final boolean VALID_DEPARTMENT_READONLY = false;
+    public static final long READONLY_DEPARTMENT_ID = 2L;
+    public static final String READONLY_DEPARTMENT_NAME = "Organisation";
+    public static final boolean READONLY_DEPARTMENT_MANDATORY = false;
+    public static final boolean READONLY_DEPARTMENT_READONLY = true;
+    public static final long UPDATED_DEPARTMENT_ID = 1L;
+    public static final String UPDATED_DEPARTMENT_NAME = "DevOps";
+    public static final boolean UPDATED_DEPARTMENT_MANDATORY = false;
+    public static final boolean UPDATED_DEPARTMENT_READONLY = false;
+    public static final long INVALID_DEPARTMENT_ID = 1000L;
+    public static final String INVALID_DEPARTMENT_NAME = "";
+    public static final Boolean INVALID_DEPARTMENT_MANDATORY = null;
+
+    public static final String DEPARTMENT_NOT_FOUND = "Department not found.";
+    public static final String DEPARTMENT_CANNOT_BE_NULL_OR_EMPTY = "Department name cannot be null or empty";
+
     @Mock
-    private DepartmentRepository departmentRepository;
+    private DepartmentRepository mockDepartmentRepository;
+
+    private DepartmentService ref;
 
     @InjectMocks
     private DepartmentServiceImpl departmentService;
@@ -38,122 +55,136 @@ class DepartmentServiceTest {
     private Department validDepartment;
     private Department readOnlyDepartment;
     private Department updatedDepartment;
+    private Department invalidDepartment;
+    private Pageable pageable;
+    private Page<Department> paginatedDepartments;
+    private List<Department> departments;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+
         validDepartment = new Department();
-        validDepartment.setId(1L);
-        validDepartment.setName("Development");
-        validDepartment.setMandatory(false);
-        validDepartment.setReadOnly(false);
+        validDepartment.setId(VALID_DEPARTMENT_ID);
+        validDepartment.setName(VALID_DEPARTMENT_NAME);
+        validDepartment.setMandatory(VALID_DEPARTMENT_MANDATORY);
+        validDepartment.setReadOnly(VALID_DEPARTMENT_READONLY);
 
         readOnlyDepartment = new Department();
-        readOnlyDepartment.setId(2L);
-        readOnlyDepartment.setName("Organisation");
-        readOnlyDepartment.setMandatory(false);
-        readOnlyDepartment.setReadOnly(true);
+        readOnlyDepartment.setId(READONLY_DEPARTMENT_ID);
+        readOnlyDepartment.setName(READONLY_DEPARTMENT_NAME);
+        readOnlyDepartment.setMandatory(READONLY_DEPARTMENT_MANDATORY);
+        readOnlyDepartment.setReadOnly(READONLY_DEPARTMENT_READONLY);
 
         updatedDepartment = new Department();
-        updatedDepartment.setId(3L);
-        updatedDepartment.setName("DevelopmentProduct");
-        updatedDepartment.setMandatory(false);
-        updatedDepartment.setReadOnly(false);
+        updatedDepartment.setId(UPDATED_DEPARTMENT_ID);
+        updatedDepartment.setName(UPDATED_DEPARTMENT_NAME);
+        updatedDepartment.setMandatory(UPDATED_DEPARTMENT_MANDATORY);
+        updatedDepartment.setReadOnly(UPDATED_DEPARTMENT_READONLY);
+
+        invalidDepartment = new Department();
+        invalidDepartment.setId(INVALID_DEPARTMENT_ID);
+        invalidDepartment.setName(INVALID_DEPARTMENT_NAME);
+
+        departments = Arrays.asList(validDepartment, readOnlyDepartment);
+        pageable = PageRequest.of(0, 2);
+        paginatedDepartments = new PageImpl<>(departments, pageable, departments.size());
+
+
+        ref = new DepartmentServiceImpl(mockDepartmentRepository);
+
+        lenient().when(mockDepartmentRepository.save(validDepartment)).thenReturn(validDepartment);
+        lenient().when(mockDepartmentRepository.findById(VALID_DEPARTMENT_ID)).thenReturn(Optional.of(validDepartment));
+        lenient().when(mockDepartmentRepository.findById(INVALID_DEPARTMENT_ID)).thenReturn(Optional.empty());
+        lenient().when(mockDepartmentRepository.save(updatedDepartment)).thenReturn(updatedDepartment);
+        lenient().when(mockDepartmentRepository.findAll(pageable)).thenReturn(paginatedDepartments);
+        lenient().when(mockDepartmentRepository.existsById(INVALID_DEPARTMENT_ID)).thenReturn(false);
+
     }
 
     @AfterEach
     void tearDown() {
-        reset(departmentRepository);
+        reset(mockDepartmentRepository);
 
     }
 
     @Test
     void testGetDepartmentByIdSuccess() {
-        when(departmentRepository.findById(1L)).thenReturn(Optional.of(validDepartment));
-
-        Department department = departmentService.getDepartmentById(1L);
+        Department department = ref.getDepartmentById(VALID_DEPARTMENT_ID);
 
         assertNotNull(department);
-        assertEquals(validDepartment.getId(), department.getId());
-        assertEquals(validDepartment.getName(), department.getName());
+        assertEquals(VALID_DEPARTMENT_ID, department.getId());
+        assertEquals(VALID_DEPARTMENT_NAME, department.getName());
     }
 
     @Test
     void testGetDepartmentByIdNotFound() {
-        when(departmentRepository.findById(1L)).thenReturn(Optional.empty());
-
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            departmentService.getDepartmentById(1L);
+            ref.getDepartmentById(INVALID_DEPARTMENT_ID);
         });
-
-        assertEquals("Department not found with ID: 1", exception.getMessage());
+        assertEquals(DEPARTMENT_NOT_FOUND, exception.getMessage());
     }
 
     @Test
     void testCreateDepartmentSuccess() {
-        when(departmentRepository.save(validDepartment)).thenReturn(validDepartment);
 
-        Department createdDepartment = departmentService.createDepartment(validDepartment);
+        Department createdDepartment = ref.createDepartment(validDepartment);
 
         assertNotNull(createdDepartment);
-        assertEquals(validDepartment.getName(), createdDepartment.getName());
+        assertEquals(VALID_DEPARTMENT_NAME, createdDepartment.getName());
+    }
+
+    @Test
+    void testCreateDepartmentWithInvalidInput() {
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ref.createDepartment(invalidDepartment);
+        });
+        assertEquals(DEPARTMENT_CANNOT_BE_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
     void testGetAllDepartmentsWithPaginationSuccess() {
-        List<Department> departments = Arrays.asList(validDepartment, readOnlyDepartment);
-        Pageable pageable = PageRequest.of(0, 2);
-        Page<Department> paginatedDepartments = new PageImpl<>(departments, pageable, departments.size());
 
-        when(departmentRepository.findAll(pageable)).thenReturn(paginatedDepartments);
-
-        Page<Department> result = departmentService.getAllDepartments(pageable);
+        Page<Department> result = ref.getAllDepartments(pageable);
 
         assertEquals(2, result.getContent().size());
-        assertEquals("Development", result.getContent().get(0).getName());
-        assertEquals("Organisation", result.getContent().get(1).getName());
+        assertEquals(VALID_DEPARTMENT_NAME, result.getContent().get(0).getName());
+        assertEquals(READONLY_DEPARTMENT_NAME, result.getContent().get(1).getName());
         assertEquals(2, result.getTotalElements());
     }
 
     @Test
     void testUpdateDepartmentSuccess() {
-        when(departmentRepository.findById(1L)).thenReturn(Optional.of(validDepartment));
-        when(departmentRepository.save(updatedDepartment)).thenReturn(updatedDepartment);
-
-        Department updatedDept = departmentService.updateDepartment(1L, updatedDepartment);
+        Department updatedDept = departmentService.updateDepartment(UPDATED_DEPARTMENT_ID, updatedDepartment);
 
         assertNotNull(updatedDept);
-        assertEquals(updatedDepartment.getName(), updatedDept.getName());
+        assertEquals(UPDATED_DEPARTMENT_NAME, updatedDept.getName());
     }
 
     @Test
     void testUpdateDepartmentNotFound() {
-        when(departmentRepository.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            departmentService.updateDepartment(1L, validDepartment);
+            ref.updateDepartment(INVALID_DEPARTMENT_ID, validDepartment);
         });
 
-        assertEquals("Department not found with ID: 1", exception.getMessage());
+        assertEquals(DEPARTMENT_NOT_FOUND, exception.getMessage());
     }
 
     @Test
     void testDeleteDepartmentSuccess() {
-        when(departmentRepository.findById(1L)).thenReturn(Optional.ofNullable(validDepartment));
 
-        departmentService.deleteDepartment(1L);
-        verify(departmentRepository, times(1)).findById(1L);
-        verify(departmentRepository, times(1)).delete(validDepartment);
+        ref.deleteDepartment(VALID_DEPARTMENT_ID);
+        verify(mockDepartmentRepository, times(1)).findById(VALID_DEPARTMENT_ID);
+        verify(mockDepartmentRepository, times(1)).delete(validDepartment);
     }
 
     @Test
     void testDeleteDepartmentNotFound() {
-        when(departmentRepository.existsById(1L)).thenReturn(false);
-
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            departmentService.deleteDepartment(1L);
+            ref.deleteDepartment(INVALID_DEPARTMENT_ID);
         });
 
-        assertEquals("Department not found with ID: 1", exception.getMessage());
+        assertEquals(DEPARTMENT_NOT_FOUND, exception.getMessage());
     }
 }

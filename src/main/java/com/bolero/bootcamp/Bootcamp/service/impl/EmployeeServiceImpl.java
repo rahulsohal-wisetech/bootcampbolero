@@ -5,7 +5,6 @@ import com.bolero.bootcamp.Bootcamp.entity.Department;
 import com.bolero.bootcamp.Bootcamp.entity.Employee;
 import com.bolero.bootcamp.Bootcamp.exception.DepartmentNotFoundException;
 import com.bolero.bootcamp.Bootcamp.exception.EmployeeNotFoundException;
-import com.bolero.bootcamp.Bootcamp.exception.InvalidEmployeeException;
 import com.bolero.bootcamp.Bootcamp.repository.DepartmentRepository;
 import com.bolero.bootcamp.Bootcamp.repository.EmployeeRepository;
 import com.bolero.bootcamp.Bootcamp.service.EmployeeService;
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -33,7 +31,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error(Constants.EMPLOYEE_NOT_FOUND, id);
-                    return new EmployeeNotFoundException("Employee not found with ID: " + id);
+                    return new EmployeeNotFoundException("Employee not found.");
                 });
     }
 
@@ -45,8 +43,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Employee saveEmployee(Employee employee) {
-        if(employee.getFirstName().isEmpty() || employee.getLastName().isEmpty()) {
-            throw new InvalidEmployeeException("Employee not found with name: " + employee.getFirstName() + " " + employee.getLastName());
+        if(employee.getFirstName() == null || employee.getLastName() == null || employee.getFirstName().isEmpty() || employee.getLastName().isEmpty()) {
+            log.error("FirstName or LastName is either empty or null!");
+            throw new IllegalArgumentException("Invalid FirstName or LastName");
         }
 
         Department defaultDepartment = departmentRepository.findMandatoryDepartment()
@@ -62,7 +61,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee existingEmployee = employeeRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error(Constants.EMPLOYEE_NOT_FOUND, id);
-                    return new EmployeeNotFoundException("Employee not found with ID: " + id);
+                    return new EmployeeNotFoundException("Employee not found.");
                 });
 
         existingEmployee.setFirstName(employeeDetails.getFirstName());
@@ -81,7 +80,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             log.info("Successfully deleted employee with ID: {}", id);
         } else {
             log.error(Constants.EMPLOYEE_NOT_FOUND, id);
-            throw new EmployeeNotFoundException("Employee not found with ID: " + id);
+            throw new EmployeeNotFoundException("Employee not found.");
         }
 
     }

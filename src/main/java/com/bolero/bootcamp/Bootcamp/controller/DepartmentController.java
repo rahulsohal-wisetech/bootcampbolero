@@ -1,9 +1,6 @@
 package com.bolero.bootcamp.Bootcamp.controller;
 
 import com.bolero.bootcamp.Bootcamp.entity.Department;
-import com.bolero.bootcamp.Bootcamp.exception.DepartmentNotFoundException;
-import com.bolero.bootcamp.Bootcamp.exception.EmployeeNotFoundException;
-import com.bolero.bootcamp.Bootcamp.exception.InvalidDepartmentException;
 import com.bolero.bootcamp.Bootcamp.service.DepartmentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -12,8 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @Slf4j
 @RestController
