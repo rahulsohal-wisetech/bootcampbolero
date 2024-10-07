@@ -1,0 +1,121 @@
+<div class="container mt-4">
+  <h1 class="text-center">Employees & Departments</h1>
+
+  <!-- Sections for Employees and Departments -->
+  <div class="row mt-5">
+    <div class="col-6">
+      <h3>Employees</h3>
+      <button class="btn btn-primary mb-2" (click)="openEmployeeModal()">Create Employee</button>
+
+      <table class="table table-bordered">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let employee of employees">
+          <td>{{ employee.firstName }} {{ employee.lastName }}</td>
+          <td>
+            <button class="btn btn-warning" (click)="openEmployeeModal(employee)">Edit</button>
+            <button class="btn btn-danger" (click)="deleteEmployee(employee.id)">Delete</button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-6">
+      <h3>Departments</h3>
+      <button class="btn btn-primary mb-2" (click)="openDepartmentModal()">Create Department</button>
+
+      <table class="table table-bordered">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>ReadOnly</th>
+          <th>Mandatory</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let department of departments">
+          <td>{{ department.name }}</td>
+          <td>{{ department.readOnly ? 'Yes' : 'No' }}</td>
+          <td>{{ department.mandatory ? 'Yes' : 'No' }}</td>
+          <td>
+            <button class="btn btn-warning" (click)="openDepartmentModal(department)">Edit</button>
+            <button class="btn btn-danger" (click)="deleteDepartment(department.id)">Delete</button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Employee Modal -->
+<div class="modal fade" id="employeeModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Employee</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form #empForm="ngForm" (ngSubmit)="saveEmployee()">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" name="firstName" [(ngModel)]="employeeForm.firstName" required />
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" name="lastName" [(ngModel)]="employeeForm.lastName" required />
+          </div>
+          <!-- Add more fields as needed -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Department Modal -->
+<div class="modal fade" id="departmentModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Department</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form #deptForm="ngForm" (ngSubmit)="saveDepartment()">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="name">Department Name</label>
+            <input type="text" id="name" name="name" [(ngModel)]="departmentForm.name" required />
+          </div>
+          <div class="form-group">
+            <label for="readonly">Read Only</label>
+            <input type="checkbox" id="readonly" name="readonly" [(ngModel)]="departmentForm.readOnly" />
+          </div>
+          <div class="form-group">
+            <label for="mandatory">Mandatory</label>
+            <input type="checkbox" id="mandatory" name="mandatory" [(ngModel)]="departmentForm.mandatory" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
