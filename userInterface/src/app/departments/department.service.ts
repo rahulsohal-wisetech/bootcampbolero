@@ -25,7 +25,7 @@ export class DepartmentService {
 
   // Delete an department
   public deleteDepartment(departmentId: number): Observable<void> {
-    return this.http.delete<void>(`/api/departments/${departmentId}`).pipe(
+    return this.http.delete<void>(`${this.apiServerUrl}/${departmentId}`).pipe(
       catchError((error: HttpErrorResponse) => {
         let errorMessage = 'An unknown error occurred!';
         if (error.status === 403) {
