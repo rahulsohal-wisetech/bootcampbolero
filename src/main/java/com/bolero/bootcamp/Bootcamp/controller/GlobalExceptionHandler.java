@@ -20,38 +20,37 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException ex) {
-        String errorMsg = Objects.requireNonNull(ex.getBindingResult().getFieldError()).getDefaultMessage();
-        log.error(Constants.EXCEPTION_OCCURRED, errorMsg);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMsg);
+        log.error(Constants.EXCEPTION_OCCURRED, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
     @ExceptionHandler(DepartmentNotFoundException.class)
     public ResponseEntity<String> handleDepartmentNotFoundException(DepartmentNotFoundException ex) {
-        log.error(Constants.EXCEPTION_OCCURRED, ex);
+        log.error(Constants.EXCEPTION_OCCURRED, ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
     @ExceptionHandler(InvalidDepartmentException.class)
     public ResponseEntity<String> handleInvalidDepartmentException(InvalidDepartmentException ex) {
-        log.error(Constants.EXCEPTION_OCCURRED, ex);
+        log.error(Constants.EXCEPTION_OCCURRED, ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
     @ExceptionHandler(EmployeeNotFoundException.class)
     public ResponseEntity<String> handleEmployeeNotFoundException(EmployeeNotFoundException ex) {
-        log.error(Constants.EXCEPTION_OCCURRED, ex);
+        log.error(Constants.EXCEPTION_OCCURRED, ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
     @ExceptionHandler(InvalidEmployeeException.class)
     public ResponseEntity<String> handleInvalidEmployeeException(InvalidEmployeeException ex) {
-        log.error(Constants.EXCEPTION_OCCURRED, ex);
+        log.error(Constants.EXCEPTION_OCCURRED, ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGeneralException(Exception ex) {
-        log.error(Constants.EXCEPTION_OCCURRED, ex);
+        log.error(Constants.EXCEPTION_OCCURRED, ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 }

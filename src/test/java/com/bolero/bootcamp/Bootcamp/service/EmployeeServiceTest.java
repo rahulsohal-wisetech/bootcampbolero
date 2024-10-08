@@ -172,7 +172,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void testGetEmployeeByIdSuccess() {
+    void shouldGetEmployeeById_WhenEmployeeExists_Success() {
         Employee employee = ref.getEmployeeById(VALID_EMPLOYEE_ID);
 
         assertNotNull(employee);
@@ -181,7 +181,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void testGetEmployeeByIdNotFound() {
+    void shouldThrowEmployeeNotFoundException_WhenEmployeeIdIsInvalid() {
         EmployeeNotFoundException exception = assertThrows(EmployeeNotFoundException.class, () -> {
             ref.getEmployeeById(INVALID_EMPLOYEE_ID);
         });
@@ -190,8 +190,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void testCreateEmployeeSuccess() {
-
+    void shouldCreateEmployee_WhenValidEmployeeDataProvided_Success() {
         Employee createdEmployee = ref.saveEmployee(validEmployee);
 
         assertNotNull(createdEmployee);
@@ -199,8 +198,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void testCreateEmployeeWhenInvalidInput() {
-
+    void shouldThrowIllegalArgumentException_WhenInvalidEmployeeDataProvided() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             ref.saveEmployee(invalidEmployee);
         });
@@ -208,8 +206,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void testUpdateEmployeeSuccess() {
-
+    void shouldUpdateEmployee_WhenValidEmployeeDataProvided_Success() {
         Employee updatedEmployee = ref.updateEmployee(UPDATED_EMPLOYEE_ID, updateEmployee);
 
         assertNotNull(updatedEmployee);
@@ -218,16 +215,16 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void testUpdateEmployeeNotFound() {
-
+    void shouldThrowEmployeeNotFoundException_WhenUpdatingNonExistentEmployee() {
         RuntimeException exception = assertThrows(EmployeeNotFoundException.class, () -> {
             ref.updateEmployee(INVALID_EMPLOYEE_ID, updateEmployee);
         });
 
         assertEquals(EMPLOYEE_NOT_FOUND, exception.getMessage());
     }
+
     @Test
-    void testUpdateEmployeeInvalidInput() {
+    void shouldThrowIllegalArgumentException_WhenUpdatingEmployeeWithInvalidData() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             ref.updateEmployee(VALID_EMPLOYEE_ID, invalidEmployee2);
         });
@@ -235,23 +232,21 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void testDeleteEmployeeSuccess() {
-
+    void shouldDeleteEmployee_WhenEmployeeExists_Success() {
         ref.deleteEmployee(VALID_EMPLOYEE_ID);
         verify(mockEmployeeRepository, times(1)).existsById(VALID_EMPLOYEE_ID);
         verify(mockEmployeeRepository, times(1)).deleteById(VALID_EMPLOYEE_ID);
     }
 
     @Test
-    void testDeleteEmployeeNotFound() {
-
+    void shouldThrowEmployeeNotFoundException_WhenDeletingNonExistentEmployee() {
         RuntimeException exception = assertThrows(EmployeeNotFoundException.class, () -> ref.deleteEmployee(INVALID_EMPLOYEE_ID));
 
         assertEquals(EMPLOYEE_NOT_FOUND, exception.getMessage());
     }
 
     @Test
-    void testGetAllEmployeeWithPaginationSuccess() {
+    void shouldReturnPaginatedEmployeeList_Success() {
         Page<Employee> result = ref.getAllEmployees(pageable);
 
         assertEquals(2, result.getContent().size());
@@ -261,8 +256,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    public void testAssignDepartmentToEmployeeSuccess() {
-
+    void shouldAssignDepartmentToEmployee_WhenValidEmployeeAndDepartment_Success() {
         Employee result = ref.assignDepartmentToEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
 
         assertNotNull(result);
@@ -271,21 +265,19 @@ class EmployeeServiceTest {
     }
 
     @Test
-    public void testAssignDepartmentToNonExistentEmployee() {
-
+    void shouldThrowEmployeeNotFoundException_WhenAssigningDepartmentToNonExistentEmployee() {
         assertThrows(EmployeeNotFoundException.class, () -> ref.assignDepartmentToEmployee(INVALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID));
         verify(mockEmployeeRepository, never()).save(any(Employee.class));
     }
 
     @Test
-    public void testAssignNonExistentDepartmentToEmployee() {
+    void shouldThrowDepartmentNotFoundException_WhenAssigningNonExistentDepartmentToEmployee() {
         assertThrows(DepartmentNotFoundException.class, () -> ref.assignDepartmentToEmployee(VALID_EMPLOYEE_ID, INVALID_DEPARTMENT_ID));
         verify(mockEmployeeRepository, never()).save(any(Employee.class));
     }
 
     @Test
-    public void testUnassignDepartmentFromEmployeeSuccess() {
-
+    void shouldUnassignDepartmentFromEmployee_WhenValidEmployeeAndDepartment_Success() {
         validEmployee.getDepartments().add(validDepartment);
         Employee result = ref.unassignDepartmentFromEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
 
@@ -295,7 +287,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    public void testUnassignDepartmentNotAssignedToEmployee() {
+    void shouldThrowDepartmentNotFoundException_WhenUnassigningNonAssignedDepartment() {
         validEmployee.getDepartments().clear();
 
         assertThrows(DepartmentNotFoundException.class, () -> {
@@ -306,7 +298,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    public void testUnassignDepartmentFromNonExistentEmployee() {
+    void shouldThrowEmployeeNotFoundException_WhenUnassigningDepartmentFromNonExistentEmployee() {
         assertThrows(EmployeeNotFoundException.class, () -> {
             ref.unassignDepartmentFromEmployee(INVALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
         });
@@ -315,7 +307,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    public void testUnassignNonExistentDepartmentFromEmployee() {
+    void shouldThrowDepartmentNotFoundException_WhenUnassigningNonExistentDepartmentFromEmployee() {
         assertThrows(DepartmentNotFoundException.class, () -> {
             ref.unassignDepartmentFromEmployee(VALID_EMPLOYEE_ID, INVALID_DEPARTMENT_ID);
         });
@@ -324,7 +316,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    public void testAssignAlreadyAssignedDepartmentToEmployee() {
+    void shouldAssignDepartmentToEmployee_WhenDepartmentIsAlreadyAssigned() {
         validEmployee.getDepartments().add(validDepartment);
         Employee result = ref.assignDepartmentToEmployee(VALID_EMPLOYEE_ID, VALID_DEPARTMENT_ID);
 
