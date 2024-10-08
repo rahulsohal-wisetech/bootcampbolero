@@ -67,7 +67,7 @@ export class AppComponent implements OnInit {
     });
   }
 
-  fetchDepartments(page: number=0, size: number=10) {
+  fetchDepartments() {
     this.departmentService.getDepartments(this.currentPage, this.pageSize).subscribe(response => {
       this.departments = response.content;  // Extract array
       this.totalPages = response.totalPages;
@@ -144,11 +144,17 @@ export class AppComponent implements OnInit {
     if (this.isEditEmployee) {
       this.employeeService.updateEmployee(this.employeeForm).subscribe(() => {
         this.fetchEmployees();
-      });
+      },
+        (error) => {
+          this.errorMessage = `Failed to update employee: ${error.message}`;
+        });
     } else {
       this.employeeService.addEmployee(this.employeeForm).subscribe(() => {
-        this.fetchEmployees();
-      });
+          this.fetchEmployees();
+      },
+        (error) => {
+          this.errorMessage = `Failed to create department: ${error.message}`;
+        });
     }
     this.employeeModal.hide();
   }
@@ -157,10 +163,16 @@ export class AppComponent implements OnInit {
     if (this.isEditDepartment) {
       this.departmentService.updateDepartment(this.departmentForm).subscribe(() => {
         this.fetchDepartments();
+      },
+        (error) => {
+          this.errorMessage = `Failed to update department: ${error.message}`;
       });
     } else {
       this.departmentService.addDepartment(this.departmentForm).subscribe(() => {
         this.fetchDepartments();
+      },
+        (error) => {
+          this.errorMessage = `Failed to create department: ${error.message}`;
       });
     }
     this.departmentModal.hide();

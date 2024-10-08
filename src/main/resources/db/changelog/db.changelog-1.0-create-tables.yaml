@@ -1,0 +1,121 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: rahulsohal
+      changes:
+        - createSequence:
+            sequenceName: SEQ_EMPLOYEE_ID
+            startValue: 1
+            incrementBy: 1
+
+  - changeSet:
+      id: 2
+      author: rahulsohal
+      changes:
+        - createSequence:
+            sequenceName: SEQ_DEPARTMENT_ID
+            startValue: 1
+            incrementBy: 1
+
+  - changeSet:
+      id: 3
+      author: rahulsohal
+      changes:
+        - createTable:
+            tableName: EMPLOYEE
+            columns:
+              - column:
+                  name: ID
+                  type: BIGINT
+                  defaultValueSequenceNext: SEQ_EMPLOYEE_ID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: FIRST_NAME
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: LAST_NAME
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 4
+      author: rahulsohal
+      changes:
+        - createTable:
+            tableName: DEPARTMENT
+            columns:
+              - column:
+                  name: ID
+                  type: BIGINT
+                  defaultValueSequenceNext: SEQ_DEPARTMENT_ID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: NAME
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: MANDATORY
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: READ_ONLY
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 5
+      author: rahulsohal
+      changes:
+        - createTable:
+            tableName: EMPLOYEE_DEPARTMENT_MAP
+            columns:
+              - column:
+                  name: EMPLOYEE_ID
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: DEPARTMENT_ID
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 6
+      author: rahulsohal
+      changes:
+        - addPrimaryKey:
+            tableName: EMPLOYEE_DEPARTMENT_MAP
+            columnNames: EMPLOYEE_ID, DEPARTMENT_ID
+            constraintName: PK_EMPLOYEE_DEPARTMENT_MAP
+
+  - changeSet:
+      id: 7
+      author: rahulsohal
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: EMPLOYEE_DEPARTMENT_MAP
+            baseColumnNames: EMPLOYEE_ID
+            constraintName: FK_EMPLOYEE_DEPARTMENT
+            referencedTableName: EMPLOYEE
+            referencedColumnNames: ID
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: EMPLOYEE_DEPARTMENT_MAP
+            baseColumnNames: DEPARTMENT_ID
+            constraintName: FK_DEPARTMENT_EMPLOYEE
+            referencedTableName: DEPARTMENT
+            referencedColumnNames: ID
+            onDelete: CASCADE
+

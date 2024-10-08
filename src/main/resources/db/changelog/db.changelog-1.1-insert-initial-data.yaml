@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: rahulsohal
+      changes:
+        - insert:
+            tableName: DEPARTMENT
+            columns:
+              - column:
+                  name: NAME
+                  value: 'Organisation'
+              - column:
+                  name: MANDATORY
+                  value: TRUE
+              - column:
+                  name: READ_ONLY
+                  value: FALSE
+
+        - insert:
+            tableName: DEPARTMENT
+            columns:
+              - column:
+                  name: NAME
+                  value: 'Finance'
+              - column:
+                  name: MANDATORY
+                  value: FALSE
+              - column:
+                  name: READ_ONLY
+                  value: TRUE
+
+        - insert:
+            tableName: DEPARTMENT
+            columns:
+              - column:
+                  name: NAME
+                  value: 'HR'
+              - column:
+                  name: MANDATORY
+                  value: FALSE
+              - column:
+                  name: READ_ONLY
+                  value: FALSE
